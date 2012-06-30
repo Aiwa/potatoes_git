@@ -7,7 +7,43 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+   # if (params.has_key?("title"))
+    #  @movies = Movie.find(:title)
+    #else
+    
+    #if (params.has_value?("title"))
+    #  @lite_title = "hilite"
+    #elsif (params.has_value?("release_date"))
+    #  @lite_date = "hilite"
+    #end
+
+    sort = params[:sort] || session[:sort]
+
+    if sort == 'title'
+      ordering, @lite_title = {:order => :title}, 'hilite'
+    elsif sort == 'release_date'
+      ordering, @lite_date = {:order => :release_date}, 'hilite'
+    end
+
+    @selected_ratings = params[:ratings] || session[:ratings] || {}
+    @all_ratings = Movie.all_ratings
+
+    if params[:sort] != session[:sort]
+      session[:sort] = sort
+      flash.keep
+      redirect_to :sort => sort, :ratings => @selected_ratings and return
+    end
+
+    if params[:ratings] != session[:ratings] and @selected_ratings != {}
+      session[:sort] = sort
+      session[:ratings] = @selected_ratings
+      flash.keep
+      redirect_to :sort => sort, :ratings => @selected_ratings and return
+    end
+
+    #@movies = Movie.order(params[:sort]).all
+    @movies = Movie.find_all_by_rating(@selected_ratings.keys, ordering)
+
   end
 
   def new
